@@ -51,3 +51,35 @@ body.sticky-bottom-footer {
 *****************************************************************************/
 
 // TODO: redefine projects layout.
+
+/******************************************************************************
+ * Publications
+ ******************************************************************************/
+
+/* 1. Reset the counter at the top of the main wrapper */
+.publications {
+  counter-reset: pub-counter;
+}
+
+/* 2. Remove default list dots */
+ol.bibliography {
+  list-style: none;
+  padding-left: 0;
+}
+
+/* 3. Set up the list item to increment the number */
+ol.bibliography li {
+  counter-increment: pub-counter;
+  position: relative;
+  padding-left: 35px; /* Make space for the "[1]" so it doesn't overlap text */
+}
+
+/* 4. Create the number [1], [2], etc. */
+ol.bibliography li::before {
+  content: "[" counter(pub-counter) "]";
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-weight: bold;
+  color: var(--global-text-color);
+}
