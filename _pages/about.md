@@ -4,8 +4,8 @@ title: about
 permalink: /
 subtitle: >-
   <strong>Research Fellow</strong> ·
-  <a href="https://clinical-research.centre.uq.edu.au/" target="_blank" rel="noopener noreferrer">UQ Centre for Clinical Research (UQCCR)</a><br>
-  <strong>Affiliate</strong>, <a href="https://clinical-research.centre.uq.edu.au/research/uq-centre-extracellular-vesicle-nanomedicine" target="_blank" rel="noopener noreferrer">UQ Centre for Extracellular Vesicle Nanomedicine</a>
+  <a href="https://frazer.uq.edu.au/" target="_blank" rel="noopener noreferrer">Frazer Institute</a><br>
+  <strong>Affiliate</strong>, <a href="https://frazer.uq.edu.au/research/research-centres/uq-centre-extracellular-vesicle-nanomedicine" target="_blank" rel="noopener noreferrer">UQ Centre for Extracellular Vesicle Nanomedicine</a>
 
 profile:
   align: right
@@ -14,7 +14,7 @@ profile:
   more_info: >-
     <p><i class="fas fa-map-marker-alt"></i> Brisbane, Australia</p>
     <p><i class="fas fa-envelope"></i> <a href="mailto:a.lai@uq.edu.au">a.lai@uq.edu.au</a></p>
-    <p><a href="https://clinical-research.centre.uq.edu.au/profile/716/andrew-lai" target="_blank" rel="noopener noreferrer">UQCCR profile</a></p>
+    <p><a href="https://about.uq.edu.au/experts/25206" target="_blank" rel="noopener noreferrer">UQ profile</a></p>
 
 selected_papers: true
 social: true
