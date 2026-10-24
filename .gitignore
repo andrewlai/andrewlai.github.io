@@ -11,3 +11,7 @@ assets/libs/
 node_modules/
 vendor
 .idea
+# publication preview generator
+__pycache__/
+preview_report.md
+new_previews/
