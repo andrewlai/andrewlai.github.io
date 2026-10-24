@@ -391,13 +391,17 @@ ninja.data = [{
           description: "",
           section: "Books",handler: () => {
               window.location.href = "/books/the_godfather/";
-            },},{id: "news-a-long-announcement-with-details",
-          title: 'A long announcement with details',
+            },},{id: "news-new-paper-in-science-advances-rapid-high-sensitivity-screening-of-pregnancy-complications-by-profiling-circulating-placental-evs",
+          title: 'New paper in Science Advances: rapid, high-sensitivity screening of pregnancy complications by profiling...',
           description: "",
-          section: "News",handler: () => {
-              window.location.href = "/news/announcement_2/";
-            },},{id: "news-new-site",
-          title: '✨ 😄 New site!',
+          section: "News",},{id: "news-new-paper-in-small-a-plasmonic-mesoporous-gold-sers-biosensor-for-ovarian-cancer-derived-evs",
+          title: 'New paper in Small: a plasmonic mesoporous gold SERS biosensor for ovarian cancer-derived...',
+          description: "",
+          section: "News",},{id: "news-new-paper-in-advanced-science-scalable-engineering-of-bio-manufactured-evs-for-selective-delivery-in-ovarian-cancer-patient-derived-models",
+          title: 'New paper in Advanced Science: scalable engineering of bio-manufactured EVs for selective delivery...',
+          description: "",
+          section: "News",},{id: "news-new-paper-in-journal-of-extracellular-vesicles-small-ev-and-total-lipid-profiles-give-a-diagnostic-advantage-over-ca-125-across-ovarian-cancer-subtypes",
+          title: 'New paper in Journal of Extracellular Vesicles: small EV and total lipid profiles...',
           description: "",
           section: "News",},{id: "projects-project-1",
           title: 'project 1',
