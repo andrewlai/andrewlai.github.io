@@ -74,6 +74,19 @@ jobs:
             preview_report.md
           retention-days: 14
 
+      - name: Push previews to review branch (pull requests)
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          sed -n '3,$p' preview_report.md | while IFS='|' read -r _ key year src title _; do echo "::notice title=${key// /}::${src}"; done
+          cd new_previews
+          [ -n "$(ls -A)" ] || exit 0
+          cp ../preview_report.md README.md
+          git init -q -b publication-previews-review
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -q -m "Preview images for PR #${{ github.event.number }} (review only, not merged)"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:publication-previews-review
+
       - name: Commit previews and redeploy
         if: github.event_name != 'pull_request'
         env:
