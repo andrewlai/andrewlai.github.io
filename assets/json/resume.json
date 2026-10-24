@@ -12,9 +12,9 @@
     },
     "profiles": [
       {
-        "network": "Twitter",
-        "username": "JayLaiEVs",
-        "url": "https://twitter.com/JayLaiEVs"
+        "network": "ORCID",
+        "username": "0000-0002-4424-8767",
+        "url": "https://orcid.org/0000-0002-4424-8767"
       },
       {
         "network": "GitHub",
@@ -23,7 +23,7 @@
       },
       {
         "network": "Google Scholar",
-        "url": "https://scholar.google.com/citations?user=xxxx",
+        "url": "https://scholar.google.com/citations?user=5k2FlJcAAAAJ",
         "username": "Andrew Lai"
       }
     ]
@@ -93,33 +93,17 @@
     {
       "name": "Proteomics",
       "level": "Advanced",
-      "keywords": [
-        "DIA-NN",
-        "Skyline",
-        "Orbitrap Astral",
-        "timsTOF",
-        "ZenoTOF"
-      ]
+      "keywords": ["DIA-NN", "Skyline", "Orbitrap Astral", "timsTOF", "ZenoTOF"]
     },
     {
       "name": "Bioinformatics",
       "level": "Advanced",
-      "keywords": [
-        "R",
-        "Python",
-        "QC dashboards",
-        "Batch correction",
-        "Multi-omic integration"
-      ]
+      "keywords": ["R", "Python", "QC dashboards", "Batch correction", "Multi-omic integration"]
     },
     {
       "name": "Teaching & Mentoring",
       "level": "Experienced",
-      "keywords": [
-        "Biochemistry labs",
-        "Proteomics workshops",
-        "Student supervision"
-      ]
+      "keywords": ["Biochemistry labs", "Proteomics workshops", "Student supervision"]
     }
   ],
   "languages": [
