@@ -1,8 +1,8 @@
 name: Publication previews
 
 # Creates preview images for papers in _bibliography/papers.bib that have a DOI
-# but no `preview`. Open-access papers get their graphical abstract or Figure 1
-# from Europe PMC; others get a generated title card.
+# but no `preview`. Open-access papers with a graphical abstract get that
+# (via PubMed Central); others get a generated title card.
 #
 # - Pull requests: dry run. Images are attached to the run as an artifact and
 #   listed in the run summary; nothing is committed.

@@ -2,8 +2,9 @@
 """Generate publication preview images for entries in _bibliography/papers.bib.
 
 For every entry that has a DOI but no `preview` field:
-  1. Look the DOI up in Europe PMC. If the paper is open access, take its
-     graphical abstract (or, failing that, Figure 1) from the full text.
+  1. Look the DOI up in PubMed Central (NCBI, with Europe PMC as fallback).
+     If the paper is open access and has a graphical abstract, use it
+     (pass --figure1 to fall back to Figure 1).
   2. Otherwise draw a simple title card (journal, year, title).
 The image is saved to assets/img/publication_preview/<key>.jpg and a
 `preview = {<key>.jpg}` line is added to the entry.
@@ -13,6 +14,7 @@ Usage:
   python bin/generate_previews.py --dry-run  # write images, leave papers.bib alone
   python bin/generate_previews.py --only KEY [KEY ...]
   python bin/generate_previews.py --cards-only
+  python bin/generate_previews.py --figure1
 """
 
 import argparse
@@ -146,25 +148,40 @@ def resolve_open_access(doi):
         raise RuntimeError(f"ncbi: {ncbi_err}; europepmc: {str(e)[:60]}")
 
 
-def pick_graphic(xml_text):
-    """Return graphic href: graphical abstract first, else first figure."""
+def _local(tag):
+    return tag.rsplit("}", 1)[-1] if isinstance(tag, str) else ""
+
+
+def _href(el):
+    for k, v in el.attrib.items():
+        if k.endswith("href") and v:
+            return v
+    return None
+
+
+def _graphics(el):
+    for g in el.iter():
+        if _local(g.tag) in ("graphic", "inline-graphic") and _href(g):
+            yield _href(g)
+
+
+def pick_graphic(xml_text, allow_figure1=False):
+    """Return (href, kind): the graphical abstract, or Figure 1 if allowed."""
     root = ET.fromstring(xml_text.encode("utf-8"))
-    for ab in root.iter("abstract"):
-        if (ab.get("abstract-type") or "").lower() in ("graphical", "graphical-abstract", "toc"):
-            for g in ab.iter("graphic"):
-                if g.get(XLINK):
-                    return g.get(XLINK), "graphical abstract"
-    for fig in root.iter("fig"):
-        tag = " ".join(filter(None, [fig.get("fig-type"), fig.get("id"), fig.get("specific-use")])).lower()
-        if "graphical" in tag or re.search(r"\b(ga|toc)\d*\b", tag):
-            for g in fig.iter("graphic"):
-                if g.get(XLINK):
-                    return g.get(XLINK), "graphical abstract"
-    body = root.find(".//body")
-    for fig in (body if body is not None else root).iter("fig"):
-        for g in fig.iter("graphic"):
-            if g.get(XLINK):
-                return g.get(XLINK), "figure 1"
+    for el in root.iter():
+        name = _local(el.tag)
+        attrs = " ".join(v for k, v in el.attrib.items() if not k.endswith("href")).lower()
+        if name == "abstract" and re.search(r"graphical|toc", attrs):
+            for h in _graphics(el):
+                return h, "graphical abstract"
+        if name == "fig" and (re.search(r"graphical|\btoc\b|\bga\d*\b|-ga-|gra-", attrs) or "graphical abstract" in "".join(el.itertext()).lower()[:200]):
+            for h in _graphics(el):
+                return h, "graphical abstract"
+    if allow_figure1:
+        for el in root.iter():
+            if _local(el.tag) == "fig":
+                for h in _graphics(el):
+                    return h, "figure 1"
     return None, None
 
 
@@ -276,6 +293,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--cards-only", action="store_true")
+    ap.add_argument("--figure1", action="store_true", help="use Figure 1 when there is no graphical abstract")
     ap.add_argument("--only", nargs="*")
     args = ap.parse_args()
 
@@ -307,9 +325,9 @@ def main():
                 if not is_oa:
                     reason = f"{pmcid + ': ' if pmcid else ''}{note}"
                 else:
-                    href, kind = pick_graphic(xml)
+                    href, kind = pick_graphic(xml, args.figure1)
                     if not href:
-                        reason = f"{pmcid}: no figure in full text"
+                        reason = f"{pmcid}: no graphical abstract" + ("" if args.figure1 else " (Figure 1 not used)")
                     else:
                         data = fetch_figure(pmcid, href, log)
                         if data:
