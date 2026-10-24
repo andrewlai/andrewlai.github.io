@@ -2,7 +2,7 @@
 layout: page
 title: Pregnancy complications
 description: Placental extracellular vesicles in gestational diabetes, preeclampsia and preterm birth
-img: assets/img/projects/project_pregnancy.jpg
+icon: fa-solid fa-person-pregnant
 importance: 2
 related_publications: true
 ---
