@@ -132,29 +132,55 @@ def pick_graphic(xml_text):
     return None, None
 
 
-def fetch_figure(pmcid, href):
-    stem = re.sub(r"\.(jpe?g|png|gif|tiff?)$", "", href, flags=re.I)
+def _image_ok(data):
+    try:
+        Image.open(io.BytesIO(data)).verify()
+        return True
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def fetch_figure(pmcid, href, log):
+    """Try several sources for a figure file. Returns bytes or None; appends notes to log."""
+    stem = Path(re.sub(r"\.(jpe?g|png|gif|tiff?)$", "", href, flags=re.I)).name
     # 1. Europe PMC figure files
     for ext in (".jpg", ".png", ".gif"):
+        url = f"https://europepmc.org/articles/{pmcid}/bin/{stem}{ext}"
         try:
-            data = get(f"https://europepmc.org/articles/{pmcid}/bin/{stem}{ext}", binary=True, tries=1)
-            Image.open(io.BytesIO(data)).verify()
-            return data
-        except Exception:  # noqa: BLE001
-            pass
-    # 2. PMC open-access package
+            data = get(url, binary=True, tries=1)
+            if _image_ok(data):
+                return data
+            log.append(f"epmc{ext}: not an image")
+        except Exception as e:  # noqa: BLE001
+            log.append(f"epmc{ext}: {str(e)[:60]}")
+    # 2. PMC article page: find the figure's image URL on the CDN
+    try:
+        html = get(f"https://pmc.ncbi.nlm.nih.gov/articles/{pmcid}/", tries=2)
+        urls = re.findall(r'(?:src|href|data-src)="(https://cdn\.ncbi\.nlm\.nih\.gov/pmc/blobs/[^"]+)"', html)
+        hits = [u for u in urls if stem.lower() in u.lower()] or [u for u in urls if re.search(r"\.(jpe?g|png|gif)$", u, re.I)]
+        for url in hits[:3]:
+            data = get(url, binary=True, tries=2)
+            if _image_ok(data):
+                return data
+        log.append(f"pmc page: {len(urls)} cdn images, {len(hits)} matched")
+    except Exception as e:  # noqa: BLE001
+        log.append(f"pmc page: {str(e)[:60]}")
+    # 3. PMC open-access package
     try:
         oa = get(f"https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi?id={pmcid}")
         m = re.search(r'format="tgz"[^>]*href="([^"]+)"', oa)
-        if m:
+        if not m:
+            log.append("oa package: none listed")
+        else:
             url = m.group(1).replace("ftp://", "https://")
             with tarfile.open(fileobj=io.BytesIO(get(url, binary=True)), mode="r:gz") as tar:
                 for member in tar.getmembers():
                     name = Path(member.name).name
                     if name.startswith(stem) and re.search(r"\.(jpe?g|png|gif)$", name, re.I):
                         return tar.extractfile(member).read()
-    except Exception:  # noqa: BLE001
-        pass
+            log.append("oa package: figure not found")
+    except Exception as e:  # noqa: BLE001
+        log.append(f"oa package: {str(e)[:60]}")
     return None
 
 
@@ -236,28 +262,40 @@ def main():
         year = clean(field(block, "year") or "")
         path = OUT / f"{key}.jpg"
         source = None
+        reason = ""
 
         if not args.cards_only:
+            log = []
             try:
                 rec = europepmc_record(doi)
                 pmcid = rec.get("pmcid") if rec else None
-                if rec and pmcid and rec.get("isOpenAccess") == "Y":
+                if not rec:
+                    reason = "not in Europe PMC"
+                elif not pmcid:
+                    reason = "no full text in PMC"
+                elif rec.get("isOpenAccess") != "Y":
+                    reason = f"{pmcid} not open access"
+                else:
                     xml = get(f"https://www.ebi.ac.uk/europepmc/webservices/rest/{pmcid}/fullTextXML")
                     href, kind = pick_graphic(xml)
-                    if href:
-                        data = fetch_figure(pmcid, href)
+                    if not href:
+                        reason = f"{pmcid}: no figure in full text"
+                    else:
+                        data = fetch_figure(pmcid, href, log)
                         if data:
                             save_jpg(Image.open(io.BytesIO(data)), path)
                             source = f"{kind} ({pmcid}, {rec.get('license') or 'open access'})"
-                elif rec and pmcid:
-                    source = None  # in PMC but not open access: use a card
+                        else:
+                            reason = f"{pmcid} {href}: download failed [" + "; ".join(log) + "]"
             except Exception as e:  # noqa: BLE001
-                print(f"  {key}: Europe PMC lookup failed: {e}", file=sys.stderr)
+                reason = f"lookup failed: {str(e)[:80]}"
             time.sleep(0.4)
+        else:
+            reason = "cards only"
 
         if not source:
             title_card(title, journal, year, path)
-            source = "title card"
+            source = f"title card ({reason})"
 
         report.append((key, year, source, title[:80]))
         print(f"{key}: {source}")
