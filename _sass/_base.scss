@@ -679,6 +679,13 @@ footer.sticky-bottom {
       object-fit: cover;
     }
 
+    .img-credit {
+      margin: 0.25rem 0.75rem 0;
+      font-size: 0.7rem;
+      color: var(--global-text-color-light);
+      text-align: right;
+    }
+
     .project-icon {
       aspect-ratio: 16 / 9;
       display: flex;
