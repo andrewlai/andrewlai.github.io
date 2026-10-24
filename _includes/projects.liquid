@@ -10,6 +10,11 @@
           alt="project thumbnail"
           class="card-img-top"
         %}
+        {% if project.img_credit %}
+          <p class="img-credit">{{ project.img_credit }}</p>
+        {% endif %}
+      {% elsif project.icon %}
+        <div class="card-img-top project-icon" aria-hidden="true"><i class="{{ project.icon }}"></i></div>
       {% endif %}
       <div class="card-body">
         <h2 class="card-title">{{ project.title }}</h2>
