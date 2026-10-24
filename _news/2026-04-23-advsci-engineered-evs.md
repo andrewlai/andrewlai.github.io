@@ -1,6 +1,6 @@
 ---
 title: "New paper in Advanced Science"
-date: 2026-04-23 00:00:00 +1000
+date: 2026-04-23 12:00:00 +1000
 inline: true
 ---
 

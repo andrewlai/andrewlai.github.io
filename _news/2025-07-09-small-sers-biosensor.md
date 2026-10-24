@@ -1,6 +1,6 @@
 ---
 title: "New paper in Small"
-date: 2025-07-09 00:00:00 +1000
+date: 2025-07-09 12:00:00 +1000
 inline: true
 ---
 
