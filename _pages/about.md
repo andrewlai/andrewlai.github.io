@@ -14,7 +14,7 @@ profile:
   more_info: >-
     <p><i class="fas fa-map-marker-alt"></i> Brisbane, Australia</p>
     <p><i class="fas fa-envelope"></i> <a href="mailto:a.lai@uq.edu.au">a.lai@uq.edu.au</a></p>
-    <p><a href="https://about.uq.edu.au/experts/25206" target="_blank" rel="noopener noreferrer">UQ profile</a></p>
+    <p><i class="fas fa-university"></i> <a href="https://about.uq.edu.au/experts/25206" target="_blank" rel="noopener noreferrer">UQ profile</a></p>
 
 selected_papers: true
 social: true
