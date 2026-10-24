@@ -2,7 +2,7 @@
 layout: page
 permalink: /publications/
 title: publications
-description: Peer-reviewed articles, book chapters and conference abstracts, newest first.
+description: Peer-reviewed articles and book chapters, newest first.
 nav: true
 nav_order: 2
 ---
