@@ -92,6 +92,7 @@ def add_preview_field(text, key, filename):
 
 def get(url, binary=False, tries=3):
     for attempt in range(tries):
+        time.sleep(0.35)  # stay under NCBI's 3 requests/second
         try:
             req = urllib.request.Request(url, headers={"User-Agent": UA})
             with urllib.request.urlopen(req, timeout=60) as r:
@@ -108,6 +109,38 @@ def europepmc_record(doi):
     url = f"https://www.ebi.ac.uk/europepmc/webservices/rest/search?query={q}&format=json&resultType=core"
     res = json.loads(get(url)).get("resultList", {}).get("result", [])
     return res[0] if res else None
+
+
+def resolve_open_access(doi):
+    """Return (pmcid, is_open_access, license, jats_xml or None, note).
+
+    Uses NCBI (ID converter, OA service, E-utilities); falls back to Europe PMC.
+    """
+    try:
+        q = urllib.parse.quote(doi)
+        conv = json.loads(get(f"https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/?ids={q}&format=json&tool=andrewlai-site-previews"))
+        pmcid = (conv.get("records") or [{}])[0].get("pmcid")
+        if not pmcid:
+            return None, False, None, None, "not in PMC"
+        oa = get(f"https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi?id={pmcid}")
+        if "idIsNotOpenAccess" in oa or "<record" not in oa:
+            return pmcid, False, None, None, "not in PMC open-access subset"
+        lic = (re.search(r'license="([^"]*)"', oa) or [None, None])[1]
+        xml = get(f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id={pmcid[3:]}&rettype=xml&tool=andrewlai-site-previews")
+        return pmcid, True, lic, xml, "ncbi"
+    except Exception as e:  # noqa: BLE001
+        ncbi_err = str(e)[:60]
+    try:
+        rec = europepmc_record(doi)
+        pmcid = rec.get("pmcid") if rec else None
+        if not pmcid:
+            return None, False, None, None, "not in PMC"
+        if rec.get("isOpenAccess") != "Y":
+            return pmcid, False, None, None, "not open access"
+        xml = get(f"https://www.ebi.ac.uk/europepmc/webservices/rest/{pmcid}/fullTextXML")
+        return pmcid, True, rec.get("license"), xml, "europepmc"
+    except Exception as e:  # noqa: BLE001
+        raise RuntimeError(f"ncbi: {ncbi_err}; europepmc: {str(e)[:60]}")
 
 
 def pick_graphic(xml_text):
@@ -267,16 +300,10 @@ def main():
         if not args.cards_only:
             log = []
             try:
-                rec = europepmc_record(doi)
-                pmcid = rec.get("pmcid") if rec else None
-                if not rec:
-                    reason = "not in Europe PMC"
-                elif not pmcid:
-                    reason = "no full text in PMC"
-                elif rec.get("isOpenAccess") != "Y":
-                    reason = f"{pmcid} not open access"
+                pmcid, is_oa, lic, xml, note = resolve_open_access(doi)
+                if not is_oa:
+                    reason = f"{pmcid + ': ' if pmcid else ''}{note}"
                 else:
-                    xml = get(f"https://www.ebi.ac.uk/europepmc/webservices/rest/{pmcid}/fullTextXML")
                     href, kind = pick_graphic(xml)
                     if not href:
                         reason = f"{pmcid}: no figure in full text"
@@ -284,12 +311,11 @@ def main():
                         data = fetch_figure(pmcid, href, log)
                         if data:
                             save_jpg(Image.open(io.BytesIO(data)), path)
-                            source = f"{kind} ({pmcid}, {rec.get('license') or 'open access'})"
+                            source = f"{kind} ({pmcid}, {lic or 'open access'})"
                         else:
                             reason = f"{pmcid} {href}: download failed [" + "; ".join(log) + "]"
             except Exception as e:  # noqa: BLE001
-                reason = f"lookup failed: {str(e)[:80]}"
-            time.sleep(0.4)
+                reason = f"lookup failed: {str(e)[:120]}"
         else:
             reason = "cards only"
 
