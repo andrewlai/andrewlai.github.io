@@ -1,6 +1,6 @@
 ---
 title: "New paper in Journal of Extracellular Vesicles"
-date: 2026-09-01 00:00:00 +1000
+date: 2026-09-01 12:00:00 +1000
 inline: true
 ---
 
