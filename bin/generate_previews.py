@@ -114,22 +114,25 @@ def europepmc_record(doi):
 def resolve_open_access(doi):
     """Return (pmcid, is_open_access, license, jats_xml or None, note).
 
-    Uses NCBI (ID converter, OA service, E-utilities); falls back to Europe PMC.
+    Uses NCBI (ID converter, E-utilities full text); falls back to Europe PMC.
     """
+    step = "idconv"
     try:
         q = urllib.parse.quote(doi)
         conv = json.loads(get(f"https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/?ids={q}&format=json&tool=andrewlai-site-previews"))
         pmcid = (conv.get("records") or [{}])[0].get("pmcid")
         if not pmcid:
             return None, False, None, None, "not in PMC"
-        oa = get(f"https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi?id={pmcid}")
-        if "idIsNotOpenAccess" in oa or "<record" not in oa:
-            return pmcid, False, None, None, "not in PMC open-access subset"
-        lic = (re.search(r'license="([^"]*)"', oa) or [None, None])[1]
+        step = "efetch"
         xml = get(f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id={pmcid[3:]}&rettype=xml&tool=andrewlai-site-previews")
+        # Only articles in the open-access subset come back with a full body.
+        if "<body" not in xml or "<fig" not in xml:
+            return pmcid, False, None, None, "full text not open access"
+        m = re.search(r'<license[^>]*license-type="([^"]+)"', xml) or re.search(r"creativecommons\.org/licenses/([a-z-]+)/", xml)
+        lic = ("CC " + m.group(1).upper()) if m and "creativecommons" in m.re.pattern else (m.group(1) if m else None)
         return pmcid, True, lic, xml, "ncbi"
     except Exception as e:  # noqa: BLE001
-        ncbi_err = str(e)[:60]
+        ncbi_err = f"{step}: {str(e)[:60]}"
     try:
         rec = europepmc_record(doi)
         pmcid = rec.get("pmcid") if rec else None
