@@ -1,0 +1,106 @@
+name: Publication previews
+
+# Creates preview images for papers in _bibliography/papers.bib that have a DOI
+# but no `preview`. Open-access papers with a graphical abstract get that
+# (via PubMed Central); others get a generated title card.
+#
+# - Pull requests: dry run. Images are attached to the run as an artifact and
+#   listed in the run summary; nothing is committed.
+# - Push to main / manual run: images and preview fields are committed to main,
+#   then the site is redeployed.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "_bibliography/papers.bib"
+      - "bin/generate_previews.py"
+      - ".github/workflows/publication-previews.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "_bibliography/papers.bib"
+      - "bin/generate_previews.py"
+      - ".github/workflows/publication-previews.yml"
+  workflow_dispatch:
+    inputs:
+      cards_only:
+        description: "Skip Europe PMC and make title cards only"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: publication-previews-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  previews:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install pillow
+          sudo apt-get install -y fonts-dejavu-core >/dev/null 2>&1 || true
+
+      - name: Generate previews
+        run: |
+          ARGS=""
+          if [ "${{ github.event_name }}" = "pull_request" ]; then ARGS="--dry-run"; fi
+          if [ "${{ inputs.cards_only }}" = "true" ]; then ARGS="$ARGS --cards-only"; fi
+          python bin/generate_previews.py $ARGS
+          cat preview_report.md >> "$GITHUB_STEP_SUMMARY"
+          mkdir -p new_previews
+          git ls-files --others --exclude-standard assets/img/publication_preview | xargs -r -I{} cp {} new_previews/
+
+      - name: Upload previews for review (pull requests)
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: publication-previews
+          path: |
+            new_previews/
+            preview_report.md
+          retention-days: 14
+
+      - name: Push previews to review branch (pull requests)
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          sed -n '3,$p' preview_report.md | while IFS='|' read -r _ key year src title _; do echo "::notice title=${key// /}::${src}"; done
+          cd new_previews
+          [ -n "$(ls -A)" ] || exit 0
+          cp ../preview_report.md README.md
+          git init -q -b publication-previews-review
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -q -m "Preview images for PR #${{ github.event.number }} (review only, not merged)"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:publication-previews-review
+
+      - name: Commit previews and redeploy
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          rm -rf preview_report.md new_previews
+          if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard assets/img/publication_preview)" ]; then
+            echo "No new previews."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add _bibliography/papers.bib assets/img/publication_preview
+          git commit -m "Add publication preview images"
+          git push
+          # Pushes made with GITHUB_TOKEN don't trigger other workflows, so redeploy explicitly.
+          gh workflow run deploy.yml --ref "${GITHUB_REF_NAME}"
