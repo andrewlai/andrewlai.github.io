@@ -38,3 +38,22 @@ A key outcome of this work has been contributing to the development of **OCRF-7*
 
 - **Interests:** Extracellular vesicles, ovarian and gynaecological cancers, biomarker discovery, pregnancy complications (GDM, preeclampsia)
 - **Methods:** DIA-MS proteomics (Orbitrap Astral, ZenoTOF 7600), EV isolation and characterisation, bioinformatics and HPC pipelines
+
+### Career
+
+**Current position**
+
+- Research Fellow and Proteomics Leader, UQ Centre for Extracellular Vesicle Nanomedicine, Frazer Institute, The University of Queensland
+
+**Qualifications**
+
+- PhD (2016), Queensland University of Technology
+- Master of Biotechnology, Queensland University of Technology
+- Bachelor of Science (Honours), Life Science, Queensland University of Technology
+- Bachelor of Science, University of New South Wales
+
+**Recognition and service**
+
+- UQ Research Stimulus Fellowship (2022)
+- Member, International Society for Extracellular Vesicles (ISEV)
+- Peer reviewer, _Journal of Extracellular Biology_ and other journals in the field
