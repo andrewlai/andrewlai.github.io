@@ -3,6 +3,7 @@ layout: page
 title: Ovarian cancer early detection
 description: Blood-based extracellular vesicle biomarkers for detecting ovarian cancer earlier
 img: assets/img/projects/ovarian_cancer.jpg
+og_image: https://andrewlai.github.io/assets/img/projects/ovarian_cancer.jpg
 importance: 1
 related_publications: true
 ---
