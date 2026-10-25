@@ -3,7 +3,7 @@ layout: page
 title: EV isolation and proteomics methods
 description: Reproducible extracellular vesicle isolation and DIA mass spectrometry workflows
 img: assets/img/projects/ev_methods.jpg
-importance: 3
+importance: 2
 related_publications: true
 ---
 
