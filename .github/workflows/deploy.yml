@@ -64,6 +64,13 @@ on:
 permissions:
   contents: write
 
+# Run one deploy at a time per branch. Two deploys finishing together (e.g. a
+# merge plus the redeploy after preview images are added) made the second
+# gh-pages push fail. Queue them so both publish in order.
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   deploy:
     # available images: https://github.com/actions/runner-images#available-images
